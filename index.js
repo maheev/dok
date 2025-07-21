@@ -16,16 +16,32 @@ app.get('/scrape', async (req, res) => {
 
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2' });
-
     await page.waitForSelector('.product-card');
 
     const data = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.product-card')).map(el => ({
-        title: el.querySelector('.product-card-name')?.innerText.trim() || 'Нет названия',
-        price: el.querySelector('.product-price__wrapper')?.innerText.trim() || 'Нет цены',
-        brand: el.querySelector('.product-card-brand')?.innerText.trim() || 'Нет бренда',
-        network: el.querySelector('.product-card-shop-name')?.innerText.trim() || 'Нет сети',
-      }));
+      return Array.from(document.querySelectorAll('.product-card')).map(el => {
+        const title = el.querySelector('.product-card-name')?.innerText.trim() || 'Нет названия';
+
+        // Ищем цену в более глубокой структуре
+        const priceEl = el.querySelector('.product-price__wrapper span, .product-price__wrapper div');
+        const price = priceEl?.innerText.trim() || 'Нет цены';
+
+        // Попытка определить бренд из названия
+        const brand = (() => {
+          const words = title.split(' ');
+          const first = words[0]?.toLowerCase();
+          const knownBrands = ['слобода', 'махеевъ', 'ряба', 'heinz', 'mr.', 'solpro', 'efko', 'hellmann\'s', 'печагин', 'metro'];
+          const match = knownBrands.find(b => first.includes(b));
+          return match ? match.charAt(0).toUpperCase() + match.slice(1) : 'Нет бренда';
+        })();
+
+        return {
+          title,
+          price,
+          brand,
+          network: 'Нет сети'
+        };
+      });
     });
 
     await browser.close();
