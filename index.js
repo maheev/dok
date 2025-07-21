@@ -1,25 +1,21 @@
 const express = require('express');
 const axios = require('axios');
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  next();
-});
+const PORT = process.env.PORT || 8080;
 
 app.get('/scrape', async (req, res) => {
   try {
-    const response = await axios.post('https://api.metro-cc.ru/graphql', {
+    const payload = {
       operationName: "search",
       variables: {
-        query: "майонез",
+        text: "майонез", // или req.query.text если нужно динамически
+        cityId: 24,
         page: 1,
-        limit: 30
+        pageSize: 30
       },
       query: `
-        query search($query: String!, $page: Int!, $limit: Int!) {
-          search(query: $query, page: $page, limit: $limit) {
+        query search($text: String!, $cityId: Int!, $page: Int!, $pageSize: Int!) {
+          search(text: $text, cityId: $cityId, page: $page, pageSize: $pageSize) {
             products {
               name
               price
@@ -29,29 +25,35 @@ app.get('/scrape', async (req, res) => {
           }
         }
       `
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': 'https://online.metro-cc.ru',
-        'Referer': 'https://online.metro-cc.ru/',
-        'User-Agent': 'Mozilla/5.0'
+    };
+
+    const response = await axios.post(
+      'https://api.metro-cc.ru/integrations-api/graphql',
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': 'https://online.metro-cc.ru',
+          'Referer': 'https://online.metro-cc.ru/',
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36',
+          'ClientId': 'METRO_ECOM_WEB',
+          // Ниже cookie можешь вставлять свой актуальный при необходимости!
+          // 'Cookie': 'metroStored=...; ...'
+        }
       }
-    });
+    );
 
-    const products = response.data?.data?.search?.products || [];
-
-    const result = products.map(item => ({
+    const data = response.data.data?.search?.products || [];
+    const result = data.map(item => ({
       title: item.name || 'Нет названия',
       price: item.price ? `${item.price} ₽` : 'Нет цены',
       brand: item.brand || 'Нет бренда',
-      network: 'METRO',
-      availability: item.in_stock_status || 'Нет информации о наличии'
+      network: 'METRO'
     }));
 
     res.json(result);
   } catch (err) {
-    console.error(err);
-    if (err.response) console.error(err.response.data);
+    console.error(err.response?.data || err.message);
     res.status(500).json({ error: 'Ошибка при получении данных с METRO' });
   }
 });
