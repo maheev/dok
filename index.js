@@ -1,6 +1,5 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
-
+const puppeteer = require('puppeteer-core');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,24 +10,22 @@ app.get('/scrape', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: true,
+      executablePath: '/usr/bin/chromium',
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2' });
+
     await page.waitForSelector('.product-card');
 
     const data = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.product-card')).map(el => {
-        const title = el.querySelector('.product-card-name')?.innerText.trim() || 'Нет названия';
-        const rub = el.querySelector('.product-price__sum-rubles')?.innerText.trim() || '';
-        const kop = el.querySelector('.product-price__sum-penny')?.innerText.trim() || '';
-        const price = rub ? `${rub}.${kop || '00'}` : 'Нет цены';
-        const brand = title.split(' ')[0].toUpperCase();
-        const network = 'METRO';
-
-        return { title, price, brand, network };
-      });
+      return Array.from(document.querySelectorAll('.product-card')).map(el => ({
+        title: el.querySelector('.product-card-name')?.innerText.trim() || 'Нет названия',
+        price: el.querySelector('.product-price__wrapper')?.innerText.trim() || 'Нет цены',
+        brand: el.querySelector('.product-card-brand')?.innerText.trim() || 'Нет бренда',
+        network: el.querySelector('.product-card-shop-name')?.innerText.trim() || 'Нет сети',
+      }));
     });
 
     await browser.close();
