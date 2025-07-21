@@ -16,31 +16,17 @@ app.get('/scrape', async (req, res) => {
 
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2' });
-    await page.waitForSelector('.product-card');
+
+    await page.waitForSelector('.product-card', { timeout: 10000 });
 
     const data = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.product-card')).map(el => {
-        const title = el.querySelector('.product-card-name')?.innerText.trim() || 'Нет названия';
+      return Array.from(document.querySelectorAll('.product-card')).map(card => {
+        const title = card.querySelector('.product-card__name')?.innerText.trim() || 'Нет названия';
+        const price = card.querySelector('.product-price__value')?.innerText.trim() || 'Нет цены';
+        const brand = card.querySelector('.product-card__brand')?.innerText.trim() || 'Нет бренда';
+        const network = card.querySelector('.product-card__shop-name')?.innerText.trim() || 'Нет сети';
 
-        // Ищем цену в более глубокой структуре
-        const priceEl = el.querySelector('.product-price__wrapper span, .product-price__wrapper div');
-        const price = priceEl?.innerText.trim() || 'Нет цены';
-
-        // Попытка определить бренд из названия
-        const brand = (() => {
-          const words = title.split(' ');
-          const first = words[0]?.toLowerCase();
-          const knownBrands = ['слобода', 'махеевъ', 'ряба', 'heinz', 'mr.', 'solpro', 'efko', 'hellmann\'s', 'печагин', 'metro'];
-          const match = knownBrands.find(b => first.includes(b));
-          return match ? match.charAt(0).toUpperCase() + match.slice(1) : 'Нет бренда';
-        })();
-
-        return {
-          title,
-          price,
-          brand,
-          network: 'Нет сети'
-        };
+        return { title, price, brand, network };
       });
     });
 
