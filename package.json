@@ -1,7 +1,6 @@
 {
-  "name": "puppeteer-app",
+  "name": "puppeteer-api",
   "version": "1.0.0",
-  "description": "Puppeteer scraper on Railway",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
