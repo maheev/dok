@@ -3,6 +3,11 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
+
 app.get('/scrape', async (req, res) => {
   try {
     const response = await axios.post('https://api.metro-cc.ru/graphql', {
@@ -33,19 +38,21 @@ app.get('/scrape', async (req, res) => {
       }
     });
 
-    const data = response.data.data?.search?.products || [];
+    const products = response.data?.data?.search?.products || [];
 
-    const result = data.map(item => ({
+    const result = products.map(item => ({
       title: item.name || 'Нет названия',
       price: item.price ? `${item.price} ₽` : 'Нет цены',
       brand: item.brand || 'Нет бренда',
-      network: 'METRO' // явно указываем, так как источник известен
+      network: 'METRO',
+      availability: item.in_stock_status || 'Нет информации о наличии'
     }));
 
     res.json(result);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Ошибка при получении данных' });
+    if (err.response) console.error(err.response.data);
+    res.status(500).json({ error: 'Ошибка при получении данных с METRO' });
   }
 });
 
