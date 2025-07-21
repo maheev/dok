@@ -1,16 +1,13 @@
 {
-  "name": "metro-parser-api",
+  "name": "metro-api-scraper",
   "version": "1.0.0",
-  "description": "Парсер METRO: выдача JSON с названием, ценой, брендом и сетью",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "^1.6.8",
     "express": "^4.18.2"
-  },
-  "engines": {
-    "node": "18.x"
   }
 }
