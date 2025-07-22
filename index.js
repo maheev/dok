@@ -24,4 +24,10 @@ app.get('/scrape', async (req, res) => {
     res.json(cleaned);
   } catch (err) {
     console.error('Ошибка при получении данных:', err.message);
-    res.status(500).json({ error: 'Ошибка при получении данных', details: err
+    res.status(500).json({ error: 'Ошибка при получении данных', details: err.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+});
