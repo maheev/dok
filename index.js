@@ -5,9 +5,7 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/scrape', async (req, res) => {
   try {
-    const apiUrl = 'https://online.metro-cc.ru/api/products?category_id=414595&offset=0&limit=100';
-
-    const response = await axios.get(apiUrl, {
+    const response = await axios.get('https://online.metro-cc.ru/api/products?category_id=414595&offset=0&limit=50', {
       headers: {
         'User-Agent': 'Mozilla/5.0',
         'Accept': 'application/json'
@@ -25,11 +23,5 @@ app.get('/scrape', async (req, res) => {
 
     res.json(cleaned);
   } catch (err) {
-    console.error('Ошибка:', err.message);
-    res.status(500).json({ error: 'Не удалось получить данные', details: err.message });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
-});
+    console.error('Ошибка при получении данных:', err.message);
+    res.status(500).json({ error: 'Ошибка при получении данных', details: err
