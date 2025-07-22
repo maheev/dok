@@ -1,31 +1,32 @@
-FROM node:18-slim
+FROM node:18
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  chromium \
-  libnss3 \
-  libatk1.0-0 \
-  libatk-bridge2.0-0 \
-  libcups2 \
-  libgbm1 \
-  libasound2 \
-  libpangocairo-1.0-0 \
-  libxss1 \
-  libgtk-3-0 \
-  libxshmfence1 \
-  libglu1 \
-  fonts-liberation \
-  libappindicator3-1 \
-  xdg-utils \
-  ca-certificates \
-  && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Установка зависимостей Chromium для Puppeteer
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-liberation \
+    libappindicator3-1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    wget \
+    --no-install-recommends \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm install --omit=dev
-
 COPY . .
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-
-EXPOSE 3000
-CMD ["node", "index.js"]
+RUN npm install
+CMD ["npm", "start"]
